@@ -111,6 +111,24 @@ class SenMusePool:
             job = client.wait(entry["job_id"], timeout=wait_timeout)
             return self._finish(request_id, inst, client, job, out_dir, name_prefix)
 
+        # 2b) 提交中状态不明（上次 submit 抛错，服务端可能已建任务）→
+        #     只回原实例用同一 request_id 重交（服务端幂等，返回原任务），绝不换实例、绝不回退其他后端
+        if entry and entry.get("status") == "submitting":
+            inst = next(i for i in self.instances if i["name"] == entry["instance"])
+            client = self._client(inst)
+            ref_ids = [client.upload_asset(p) for p in (reference_paths or [])]
+            job = client.submit(
+                request_id=request_id, kind=kind, prompt=prompt,
+                reference_ids=ref_ids, aspect=aspect, duration=duration,
+                conversation_id=conversation_id,
+            )
+            entry["job_id"] = job["id"]
+            entry["status"] = job.get("status", "submitted")
+            entry["updated_at"] = time.time()
+            self._save_ledger()
+            job = client.wait(job["id"], timeout=wait_timeout)
+            return self._finish(request_id, inst, client, job, out_dir, name_prefix)
+
         # 3) 失败过 → 不自动重试，要求调用方换 attempt
         if entry and entry.get("status") in ("failed", "needs_review", "cancelled"):
             raise SenMuseError(
@@ -119,19 +137,24 @@ class SenMusePool:
                 job=entry,
             )
 
-        # 4) 新任务 → 选实例提交，先记台账再等结果
+        # 4) 新任务 → 选实例；先写 "submitting" 台账再 submit，
+        #    这样 submit 抛错（状态不明）时后续调用知道已尝试过、只能回原实例对账
         inst = self._pick_instance()
         client = self._client(inst)
+        jobs[request_id] = {
+            "instance": inst["name"], "job_id": None, "status": "submitting",
+            "kind": kind, "files": [], "md5": [], "updated_at": time.time(),
+        }
+        self._save_ledger()
         ref_ids = [client.upload_asset(p) for p in (reference_paths or [])]
         job = client.submit(
             request_id=request_id, kind=kind, prompt=prompt,
             reference_ids=ref_ids, aspect=aspect, duration=duration,
             conversation_id=conversation_id,
         )
-        jobs[request_id] = {
-            "instance": inst["name"], "job_id": job["id"], "status": job.get("status", "submitted"),
-            "kind": kind, "files": [], "md5": [], "updated_at": time.time(),
-        }
+        jobs[request_id]["job_id"] = job["id"]
+        jobs[request_id]["status"] = job.get("status", "submitted")
+        jobs[request_id]["updated_at"] = time.time()
         self._save_ledger()
         job = client.wait(job["id"], timeout=wait_timeout)
         return self._finish(request_id, inst, client, job, out_dir, name_prefix)
