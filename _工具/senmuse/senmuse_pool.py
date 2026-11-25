@@ -22,6 +22,10 @@ from pathlib import Path
 from senmuse_client import SenMuseClient, SenMuseError
 
 
+class SenMuseUnavailableError(SenMuseError):
+    """提交前就失败：所有实例不可用、尚未发起任何 submit。调用方可以安全回退其他后端。"""
+
+
 def _md5(path: Path) -> str:
     h = hashlib.md5()
     with open(path, "rb") as f:
@@ -78,7 +82,7 @@ class SenMusePool:
                 errors.append(f"{inst['name']}: state={st.get('muse', {}).get('state')}")
             except SenMuseError as e:
                 errors.append(f"{inst['name']}: {e}")
-        raise SenMuseError("没有可用的 SenMuse 实例：" + "；".join(errors))
+        raise SenMuseUnavailableError("没有可用的 SenMuse 实例：" + "；".join(errors))
 
     # ---------- 生成（带防重复） ----------
     def generate(
