@@ -1,0 +1,128 @@
+{
+  "file": "D:/Hermes环境准备/AI漫剧制作/04_视频素材/待生成/Muse_S04_敲门.mp4",
+  "kind": "video",
+  "info": {
+    "width": 720,
+    "height": 1280,
+    "fps": 24.0,
+    "duration": 10.0,
+    "codec": "h264",
+    "bytes": 2829808
+  },
+  "tech": [
+    {
+      "name": "画幅 720x1280",
+      "ok": true,
+      "note": "竖屏 9:16"
+    },
+    {
+      "name": "时长 10.00s",
+      "ok": true,
+      "note": "应在 1-15 秒内"
+    },
+    {
+      "name": "帧率 24.00",
+      "ok": true,
+      "note": "帧率异常"
+    },
+    {
+      "name": "编码 h264",
+      "ok": true,
+      "note": "无法解码"
+    }
+  ],
+  "expectations": [
+    {
+      "text": "画面中可见一只手，且指节与门板接触或紧贴门板",
+      "kind": "must"
+    },
+    {
+      "text": "门底部存在一条横向的冷蓝色光缝",
+      "kind": "must"
+    },
+    {
+      "text": "画面中不出现任何文字、数字、水印或字幕",
+      "kind": "must_not"
+    },
+    {
+      "text": "门保持关闭状态，不出现门被推开或有人从门内走出的画面",
+      "kind": "must_not"
+    },
+    {
+      "text": "画面为竖屏构图，高度大于宽度",
+      "kind": "must"
+    }
+  ],
+  "rows": [
+    {
+      "i": 1,
+      "text": "画面中可见一只手，且指节与门板接触或紧贴门板",
+      "kind": "must",
+      "verdicts": [
+        "yes",
+        "no",
+        "no"
+      ],
+      "state": "PASS",
+      "why": "右下角可见手，手指紧贴门板; 画面中没有看到手; 画面中未见手与门板接触"
+    },
+    {
+      "i": 2,
+      "text": "门底部存在一条横向的冷蓝色光缝",
+      "kind": "must",
+      "verdicts": [
+        "no",
+        "no",
+        "no"
+      ],
+      "state": "FAIL",
+      "why": "门底部黑暗，无横向蓝色光缝; 门底部没有冷蓝色光缝; 门底无冷蓝色光缝"
+    },
+    {
+      "i": 3,
+      "text": "画面中不出现任何文字、数字、水印或字幕",
+      "kind": "must_not",
+      "verdicts": [
+        "no",
+        "no",
+        "yes"
+      ],
+      "state": "FAIL",
+      "why": "门上有数字“302”; 门上有数字302，墙上有通知文字; 画面无文字、数字或水印"
+    },
+    {
+      "i": 4,
+      "text": "门保持关闭状态，不出现门被推开或有人从门内走出的画面",
+      "kind": "must_not",
+      "verdicts": [
+        "yes",
+        "yes",
+        "no"
+      ],
+      "state": "FAIL",
+      "why": "门呈关闭状态，无人走出; 门处于关闭状态，无人走出; 门已开，人已入门内"
+    },
+    {
+      "i": 5,
+      "text": "画面为竖屏构图，高度大于宽度",
+      "kind": "must",
+      "verdicts": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "state": "PASS",
+      "why": "画面竖构图，高度明显大于宽度; 图像高度大于宽度，为竖屏; 竖屏构图，高大于宽"
+    }
+  ],
+  "overall": "FAIL",
+  "frames": [
+    "C:\\Users\\admin\\AppData\\Local\\Temp\\muse_qc_Muse_S04_敲门.mp4\\f1.png",
+    "C:\\Users\\admin\\AppData\\Local\\Temp\\muse_qc_Muse_S04_敲门.mp4\\f2.png",
+    "C:\\Users\\admin\\AppData\\Local\\Temp\\muse_qc_Muse_S04_敲门.mp4\\f3.png"
+  ],
+  "retry_hint": [
+    "在提示词里把这句改成画面可验证的具体动作：「门底部存在一条横向的冷蓝色光缝」，并把该动作放在镜头前 2 秒内完成。",
+    "在提示词里加强负面约束并加一句「整段视频任何一帧都不得出现文字、字幕、水印」。"
+  ]
+}

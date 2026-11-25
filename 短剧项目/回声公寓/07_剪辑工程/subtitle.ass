@@ -1,0 +1,14 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+WrapStyle: 0
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,OutlineColour,Bold,Alignment,MarginV,Outline,Shadow
+Style: Default,Microsoft YaHei,46,&H00FFFFFF,&H00000000,0,2,130,3,0
+
+[Events]
+Format: Layer,Start,End,Style,Text
+Dialogue: 0,0:00:00.30,0:00:03.80,Default,整栋楼都睡了
+Dialogue: 0,0:00:20.30,0:00:24.52,Default,门后没人,那只手是谁的?

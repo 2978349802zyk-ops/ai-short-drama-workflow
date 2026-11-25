@@ -1,0 +1,82 @@
+<div class="wrap">
+<style>
+.wrap{color:var(--foreground,#e8e8e8);font-family:inherit;font-size:13px;line-height:1.6;max-width:1120px}
+.wrap *{box-sizing:border-box}
+.hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.hd b{font-size:20px;font-weight:700}
+.tag{border:1px solid var(--border,#444);border-radius:99px;padding:2px 9px;font-size:11px;color:var(--muted-foreground,#aaa)}
+.tag.good{color:#7ee2a8;border-color:#2d6a45}
+.tag.warn{color:#f0c674;border-color:#7a5a1e}
+.sub{color:var(--muted-foreground,#aaa);font-size:12px;margin-bottom:14px}
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(210px,1fr));gap:10px}
+.card{position:relative;border:1px solid var(--border,#3a3a3a);border-radius:10px;padding:12px 13px;background:var(--card,transparent)}
+.card:not(:last-child):after{content:"→";position:absolute;right:-11px;top:50%;transform:translateY(-50%);color:var(--accent,#8ab4f8);font-size:17px;z-index:2}
+.n{color:var(--accent,#8ab4f8);font-size:11px;font-weight:700;letter-spacing:.06em}
+.fn{font-weight:700;font-size:14px;margin:2px 0 6px;word-break:break-all}
+.desc{color:var(--muted-foreground,#b0b0b0);font-size:12px;min-height:34px}
+.fns{margin-top:8px;font-size:11px;color:var(--muted-foreground,#999);border-top:1px dashed var(--border,#444);padding-top:6px;word-break:break-word}
+.io{margin-top:6px;font-size:11px;color:#9ecbff}
+h3{font-size:14px;margin:18px 0 8px;padding-left:8px;border-left:3px solid var(--accent,#8ab4f8)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid var(--border,#3a3a3a);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted-foreground,#aaa);font-weight:600}
+code{font-size:11px;color:#c8e6c9}
+.pill{display:inline-block;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700}
+.bad{background:#5d2020;color:#ffb4b4}.mid{background:#5a4718;color:#ffd98a}.ok{background:#1e5634;color:#a8f0c0}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.box{border:1px solid var(--border,#3a3a3a);border-radius:10px;padding:11px 13px}
+.box.badbox{border-color:#7a3535}.box.okbox{border-color:#2d6a45}
+.box .bt{font-weight:700;margin-bottom:5px}
+ul{margin:4px 0 0;padding-left:18px}li{margin:2px 0}
+.note{color:#f0c674;font-size:12px;margin-top:8px}
+</style>
+
+<div class="hd"><b>Muse 提示词与自检框架 · 现状全貌</b>
+<span class="tag good">框架自检 22/22</span><span class="tag">未生成新视频</span><span class="tag">2026-11-18</span></div>
+<div class="sub">四层闭环：把「生成成功」和「提示词遵循成功」彻底分开验收</div>
+
+<div class="pipe">
+  <div class="card"><div class="n">01 / 改写</div><div class="fn">muse_prompt.py</div>
+    <div class="desc">叙事句 → 单一动作可执行提示词 + 可判定断言；递进句自动警告拆镜</div>
+    <div class="fns">detect · action_state · rule_build · llm_build · align_exps · normalize_must_not</div>
+    <div class="io">出：prompt / expectations / warnings / mode</div></div>
+  <div class="card"><div class="n">02 / 生成</div><div class="fn">muse_gen.py</div>
+    <div class="desc">浏览器 CDP 连已登录 Muse 会话，发提示词、等新素材、导出落盘（本轮未改）</div>
+    <div class="fns">cdp_tabs · ensure_browser · connect · send_prompt · media_state · wait_media · export_image · export_video</div>
+    <div class="io">出：图片 / 视频文件</div></div>
+  <div class="card"><div class="n">03 / 验收</div><div class="fn">muse_qc.py</div>
+    <div class="desc">技术指标 + 早中晚 3 帧多模态判图，逐条断言 yes/no，汇总三档结论</div>
+    <div class="fns">probe · tech_checks · extract_frames · ask_vision · summarize · retry_hint · run_qc · render_report</div>
+    <div class="io">出：*_qc.md 报告 + 抽帧</div></div>
+  <div class="card"><div class="n">04 / 闭环</div><div class="fn">muse_shoot.py</div>
+    <div class="desc">串起三步；不合格时把失败断言翻译成修正要求，重写提示词重试</div>
+    <div class="fns">generate · shot_flow · log · main</div>
+    <div class="io">出：muse_manifest.jsonl 记录</div></div>
+</div>
+
+<h3>判定规则（当前）</h3>
+<table><tr><th>层</th><th>检查</th><th>通过条件</th><th>失败后果</th></tr>
+<tr><td>技术</td><td>分辨率 / 画幅 / 时长 / 编码</td><td>竖屏 9:16，1–15 秒，可解码</td><td>直接不合格</td></tr>
+<tr><td>语义</td><td>每条 must 断言</td><td>任一帧判 yes</td><td>全帧 no → 不合格</td></tr>
+<tr><td>语义</td><td>must_not 断言</td><td>不出现违规项</td><td>出现 no → 不合格</td></tr>
+<tr><td>语义</td><td>断言与提示词不同步</td><td>降级处理</td><td>只记部分通过，不误伤</td></tr>
+<tr><td>汇总</td><td>全通过 / 部分 / 不合格</td><td>有不合格→FAIL；否则有部分→PARTIAL</td><td>FAIL 触发重写重试</td></tr></table>
+
+<h3>实测证据（历史素材，没生成新片）</h3>
+<div class="split">
+ <div class="box badbox"><div class="bt"><span class="pill bad">FAIL</span> 走廊灯灭 vs 公仔视频</div>
+   <ul><li>画幅 480×480 方形，不是竖屏</li><li>画面无走廊、无可天花板顶灯</li><li>实际是玩偶特写，无纵深推进</li><li>画面白亮，与「灯熄灭」相反</li></ul>
+   <div class="sub" style="margin:6px 0 0">→ 逐条抓出，用户说的问题可自动检出</div></div>
+ <div class="box okbox"><div class="bt"><span class="pill mid">PARTIAL</span> 敲门视频 vs 敲门断言</div>
+   <ul><li>竖屏 / 冷蓝色调 / 手贴门板 → 通过</li><li>门牌 302 不再误判成水印</li><li>模型自己加的「袖口」「光带」没出现 → 只记部分</li></ul>
+   <div class="sub" style="margin:6px 0 0">→ 不因过度要求误伤成硬失败</div></div>
+</div>
+<div class="note">边界：抽帧证明不了「一盏接一盏」的时间顺序。真要递进动作必须拆多镜——框架只在提示词阶段警告，还没做自动拆镜。</div>
+
+<h3>GitHub 同类对比（调研结论）</h3>
+<table><tr><th>项目</th><th>它强在哪</th><th>我们缺什么</th></tr>
+<tr><td><b>SCMAPR</b><br>自纠正多智能体提示词改写</td><td>场景路由 → 策略合成 → 原子化提取 → 蕴含验证 → 定向修订；专门验证「改写后是否丢原意」</td><td>我们只有 aligned 标记，粗；没有场景分类和原子级蕴含检查</td></tr>
+<tr><td><b>T2V-CompBench</b><br>CVPR 2025</td><td>7 类组合性：属性绑定、动态属性、空间关系、运动、动作、物体交互、数量</td><td>我们断言是自然语言随意写的，没有按类型分表</td></tr>
+<tr><td><b>VMBench</b><br>ICCV 2025</td><td>运动感知对齐，16 帧采样 + 姿态/遮挡等细粒度维度</td><td>我们只抽 3 帧，运动质量判不准</td></tr>
+<tr><td><b>ViMax</b><br>Agentic 视频生成</td><td>角色一致性、首帧连续性、并行生成、Agent Loop、Web UI</td><td>漫剧最要命的角色跨镜一致性，我们完全没检查</td></tr></table>
+</div>

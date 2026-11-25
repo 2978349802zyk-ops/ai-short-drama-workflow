@@ -1,0 +1,42 @@
+# 虚拟环境
+.venv/
+venv/
+.venv310/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 构建中间产物（每次重剪都会再生）
+**/tmp_*/
+
+# 媒体大文件：素材、成片、音轨（属内容产物，不是工作流，且超出 GitHub 体积限制）
+*.mp4
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.aac
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.webm
+*.gif
+*.bmp
+
+# 模型权重
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# 日志
+*.log
+
+# 系统文件
+Thumbs.db
+.DS_Store

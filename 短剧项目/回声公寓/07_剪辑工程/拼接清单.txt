@@ -1,0 +1,6 @@
+file 'D:/Hermes环境准备/AI漫剧制作/06_剪辑工程/01.mp4'
+file 'D:/Hermes环境准备/AI漫剧制作/06_剪辑工程/02.mp4'
+file 'D:/Hermes环境准备/AI漫剧制作/06_剪辑工程/03.mp4'
+file 'D:/Hermes环境准备/AI漫剧制作/06_剪辑工程/04.mp4'
+file 'D:/Hermes环境准备/AI漫剧制作/06_剪辑工程/05.mp4'
+file 'D:/Hermes环境准备/AI漫剧制作/06_剪辑工程/06.mp4'
