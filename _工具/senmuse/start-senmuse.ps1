@@ -1,36 +1,44 @@
-# SenMuse 服务保活启动脚本（Windows PowerShell）
-# 作用：服务没在跑就拉起来（最小化窗口），在跑就什么都不做。
+# SenMuse 4 实例保活启动脚本（Windows PowerShell）
+# 作用：逐个检查 4 个实例，没在跑的拉起来（最小化窗口），在跑的跳过。
 # 用法：
 #   1. 手动：右键 → 使用 PowerShell 运行
 #   2. 开机自启：Win+R 输入 shell:startup，把本文件的快捷方式放进去
 #   3. 定时保活：任务计划程序里建一个每 10 分钟运行本脚本的任务（可选）
 #
-# 注意：改下面两个路径为你自己的 SenMuse 目录。
+# 前提：本机代理（127.0.0.1:7897）开着；4 个实例各自已 login（acc1 已登录，2/3/4 需本人登录）。
 
 $SenMuseDir = "D:\senmuse"
-$DataDir = ".senmuse-api"
-$HealthUrl = "http://127.0.0.1:47831/healthz"
+$Instances = @(
+    @{ Port = 47831; Data = ".senmuse-api"   },
+    @{ Port = 47832; Data = ".senmuse-api-2" },
+    @{ Port = 47833; Data = ".senmuse-api-3" },
+    @{ Port = 47834; Data = ".senmuse-api-4" }
+)
 
-try {
-    $r = Invoke-RestMethod -Uri $HealthUrl -TimeoutSec 3
-    if ($r.alive) {
-        Write-Host "SenMuse 已在运行，无需启动。"
-        exit 0
+foreach ($inst in $Instances) {
+    $url = "http://127.0.0.1:$($inst.Port)/healthz"
+    $alive = $false
+    try {
+        $r = Invoke-RestMethod -Uri $url -TimeoutSec 3
+        if ($r.alive) { $alive = $true }
+    } catch { }
+    if ($alive) {
+        Write-Host "端口 $($inst.Port) 已在运行，跳过。"
+        continue
     }
-} catch {
-    # 连不上说明没在跑，继续往下启动
+    Write-Host "端口 $($inst.Port) 未运行，正在启动（data: $($inst.Data)）……"
+    Start-Process -FilePath "node" `
+        -ArgumentList "scripts/senmuse-api.mjs", "serve", "--data", $inst.Data `
+        -WorkingDirectory $SenMuseDir `
+        -WindowStyle Minimized
 }
 
-Write-Host "SenMuse 未运行，正在启动……"
-Start-Process -FilePath "node" `
-    -ArgumentList "scripts/senmuse-api.mjs", "serve", "--data", $DataDir `
-    -WorkingDirectory $SenMuseDir `
-    -WindowStyle Minimized
-
 Start-Sleep -Seconds 3
-try {
-    $r = Invoke-RestMethod -Uri $HealthUrl -TimeoutSec 5
-    if ($r.alive) { Write-Host "SenMuse 已启动：http://127.0.0.1:47831" }
-} catch {
-    Write-Host "启动后仍连不上，请手动在 $SenMuseDir 里运行 serve 看报错。"
+foreach ($inst in $Instances) {
+    try {
+        $r = Invoke-RestMethod -Uri "http://127.0.0.1:$($inst.Port)/healthz" -TimeoutSec 5
+        if ($r.alive) { Write-Host "端口 $($inst.Port) OK" }
+    } catch {
+        Write-Host "端口 $($inst.Port) 仍连不上，请手动在 $SenMuseDir 里运行 serve --data $($inst.Data) 看报错。"
+    }
 }
