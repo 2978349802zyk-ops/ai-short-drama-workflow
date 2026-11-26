@@ -9,7 +9,7 @@
 - 变基：**成功**（本地 2 个 EP02 提交已变基到 origin/main 之后）
 - EP02 文件核验：**通过**（校验蓝图 10533B、语义校验报告 10918B 均存在）
 - 开自动拉取：`inspect_tick.py` 的 `do_fetch` 默认已改 True，`py_compile` 通过
-- push EP02 / 报告到 GitHub：**失败（网络故障，未完成）**
+- push EP02 / 报告到 GitHub：**成功**（首次两次因网络中断失败，网络恢复后第 3 次成功，本地与远程一致）
 - 脏改动恢复：**成功**（stash 已 pop，工作区与执行前一致）
 - 等一轮定时巡检：见下（本地部分完成，自动拉取未验证）
 
@@ -49,16 +49,17 @@
 - `39b8048 docs: 写EP02校验蓝图与8+1检查清单` → `短剧项目/回声公寓/EP02/校验蓝图.md`（10533B）
 - `7e6fa62 review: EP02语义校验8+1条复核完成` → `短剧项目/回声公寓/EP02/语义校验报告.md`（10918B）
 
-## 5. push（未完成，网络故障）
+## 5. push（已完成；前两次因网络中断失败，第 3 次成功）
 
 - 推送前远程 origin/main：`c85585192f361d5b7a42cd0c6dadd0ddb4da0cfe`
-- `git push origin main` 连续 2 次失败（非 force）：
-  - `fatal: unable to access 'https://github.com/2978349802zyk-ops/ai-short-drama-workflow.git/': Failed to connect to github.com port 443 after 21118 ms`
+- `git push origin main` 前 2 次失败（非 force）：
+  - `fatal: unable to access '...': Failed to connect to github.com port 443 after 21118 ms`
   - 第二次：同样错误（21087ms）
-- 诊断：`git fetch` 随后也超时（60s）—— **网络整体中断**，非 push 特有、非被拒、非分叉
+- 诊断：`git fetch` 随后也超时（60s）—— 网络整体中断，非 push 特有、非被拒、非分叉
 - git http.proxy 未配置；进程无 HTTPS_PROXY 环境变量
-- 推送后远程 origin/main 仍为 `c855851`（未变）
-- 本地维持 `ahead 2`，待网络恢复后重推（命令：`git -C "D:/Hermes环境准备/AI漫剧制作" push origin main`）
+- 第 3 次 push（网络恢复后）**成功**：`c855851..71cd562 main -> main`
+- 推送后远程 origin/main：`71cd5625c39ccd6c0d2a8526840b67d97e6ff273`（含 2 个 EP02 提交 + 报告提交）
+- 本地与远程一致（`## main...origin/main`，无 ahead/behind）
 
 ## 6. 开自动拉取
 
@@ -79,7 +80,7 @@
 
 ## 9. 遗留问题（需用户处理）
 
-1. **网络中断导致 push 未完成**：EP02 两个提交和本报告都还没进 GitHub。网络恢复后跑：`git -C "D:/Hermes环境准备/AI漫剧制作" push origin main`（报告需先 `git add reports/RPT-AUTOPULL-20261126-v2.md` 并提交）。未自动重试是遵循「不反复重试」与 v2 停下条件。
+1. **push 已完成**：EP02 两个提交和本报告均已进 GitHub（`71cd562`），本地与远程一致。前两次失败是网络瞬时中断，第 3 次成功，无需用户重推。
 2. **自动拉取与脏工作区的内在矛盾**：当前工作区是脏的（2 处改动 + 13 未跟踪），`repo_flow_scan` 会一直判 dirty=true 停下，所以即使网络恢复，定时巡检也不会真正 ff-only 拉取。要让自动拉取跑通，需要脏改动要么提交、要么常驻 stash——但蓝图禁止丢弃/强推，这一步需要用户拍板。
 3. 备份分支 `backup-pre-rebase-20261126` 保留在本地（未推），如需清理由用户决定。
 
