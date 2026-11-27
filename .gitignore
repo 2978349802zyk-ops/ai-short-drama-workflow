@@ -40,3 +40,6 @@ __pycache__/
 # 系统文件
 Thumbs.db
 .DS_Store
+
+# BP-AUTO 幂等状态（本地生成，不入版本库，避免污染文件流快进判定）
+.state/
